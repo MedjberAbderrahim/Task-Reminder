@@ -1,5 +1,6 @@
 body{
     background-color: rgb(55, 55, 55);
+    width: 100%
 }
 
 div{
@@ -8,9 +9,8 @@ div{
 }
 
 #addButton{
-    width: 10%;
-    height: 7dvh;
-
+    width: 7dvh;
+    height: fit-content;
     font-weight: bold;
     font-size: large;
 
@@ -19,6 +19,25 @@ div{
 
     background-color: rgb(11, 11, 11);
     color: lightgray;
+    font-size: 250%;
+}
+
+hr{
+    border: 2px solid black
+}
+
+td{
+    border-bottom: 1px solid black;
+    font-size: 150%;
+}
+
+table{
+    width: 98%;
+}
+
+#input{
+    width: 50%;
+    font-size: larger;
 }
 
 #title{
