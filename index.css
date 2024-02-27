@@ -1,38 +1,29 @@
 body{
     background-color: rgb(55, 55, 55);
-    width: 100%
+    width: 99%
 }
 
-div{
+#titleDiv{
     display: flex;
     justify-content: space-between;
 }
 
 #addButton{
     width: 7dvh;
-    height: fit-content;
+    aspect-ratio: 1 / 1;
+
     font-weight: bold;
-    font-size: large;
+    font-size: 250%;
 
     border-radius: 7%;
     border: none;
 
     background-color: rgb(11, 11, 11);
     color: lightgray;
-    font-size: 250%;
 }
 
 hr{
     border: 2px solid black
-}
-
-td{
-    border-bottom: 1px solid black;
-    font-size: 150%;
-}
-
-table{
-    width: 98%;
 }
 
 #input{
@@ -40,6 +31,30 @@ table{
     font-size: larger;
 }
 
-#title{
+h1{
     margin: 0;
+}
+
+#taskList {
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.taskElement{
+    display: flex;
+    padding: 1%;
+    border-bottom: 1px solid black;
+    width: 100%;
+    justify-content: space-between;
+    font-size: 140%;
+}
+
+.removeButton{
+    border: 2px solid rgb(33, 33, 33);
+    border-radius: 20%;
+    background-color: rgb(33, 33, 33);
+    width: 4dvh;
+    aspect-ratio: 1 / 1;
 }
