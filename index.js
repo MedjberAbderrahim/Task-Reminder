@@ -17,6 +17,22 @@ const hourSelect = document.querySelector("#hourSelect");
 const minuteSelect = document.querySelector("#minuteSelect");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
 let tasks = [];
+let keyList = [];
+for (let i = 0; i < localStorage.length; i++) {
+    let localStorageKey = localStorage.key(i);
+    let newElement = document.createElement("div");
+    let localStorageItem;
+    if (localStorageKey === null)
+        throw new Error(`localStorage.key(${i}) returned null`);
+    keyList.push(localStorageKey);
+    newElement.className = "taskElement";
+    localStorageItem = localStorage.getItem(localStorageKey);
+    if (localStorageItem === null)
+        throw new Error(`localStorage.getItem(${localStorageKey}) returned null`);
+    newElement.innerHTML = localStorageItem;
+    tasks.push(newElement);
+    taskList.append(newElement);
+}
 timerSelect.addEventListener("change", () => {
     if (timerSelect.value == "no") {
         hourSelect.style.display = "none";
@@ -52,39 +68,50 @@ function createTask(text) {
     newTask.append(newRow, newDiv);
     return newTask;
 }
+function addTask(task, precision) {
+    taskList.append(task);
+    tasks.push(task);
+    let newItemKey = Math.floor(Math.random() * Math.pow(10, precision)).toString();
+    keyList.push(newItemKey);
+    localStorage.setItem(newItemKey, task.innerHTML);
+}
 addTaskButton.addEventListener("click", () => {
     if (inputBar.value === "")
         return;
     let newTask = createTask(inputBar.value);
-    taskList.append(newTask);
-    tasks.push(newTask);
-    inputBar.value = "";
+    addTask(newTask, 8);
     addTaskButton.style.display = "none";
-    inputBar.style.display = "none";
     newTaskButton.style.display = "initial";
+    inputBar.style.display = "none";
+    inputBar.value = "";
     timerSelect.style.display = "none";
-    hourSelect.style.display = "none";
-    minuteSelect.style.display = "none";
     timerSelect.value = "no";
+    hourSelect.style.display = "none";
+    hourSelect.value = "00";
+    minuteSelect.style.display = "none";
+    minuteSelect.value = "00";
 });
 function removeTask(taskElement) {
     return __awaiter(this, void 0, void 0, function* () {
         let divNode = taskElement.parentElement;
         let parentNode = divNode.parentElement;
         let rowNode = parentNode.children[0];
+        let indexOfElement = tasks.indexOf(parentNode);
         taskElement.textContent = 'X';
         rowNode.style.textDecoration = "line-through";
         rowNode.style.opacity = "40%";
         divNode.style.opacity = "40%";
+        tasks.splice(indexOfElement, 1);
+        keyList.splice(indexOfElement, 1);
         yield sleep(2000);
-        tasks.splice(tasks.indexOf(parentNode), 1);
+        localStorage.removeItem(keyList[indexOfElement]);
         parentNode.remove();
     });
 }
 function checkTimers() {
     var _a, _b;
     let time = new Date();
-    for (const index in tasks) {
+    for (let index = 0; index < tasks.length; index++) {
         let spanElement = tasks[index].children[1].children[0];
         if (spanElement.textContent == "")
             continue;
