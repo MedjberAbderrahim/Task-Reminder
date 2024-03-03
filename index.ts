@@ -9,6 +9,28 @@ const minuteSelect = document.querySelector("#minuteSelect") as HTMLSelectElemen
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
 
 let tasks: HTMLElement[] = []
+let keyList: string[] = []
+
+for(let i = 0; i < localStorage.length; i++){
+    let localStorageKey = localStorage.key(i)
+    let newElement = document.createElement("div") as HTMLDivElement
+    let localStorageItem: string | null
+
+    if(localStorageKey === null)
+        throw new Error(`localStorage.key(${i}) returned null`);
+    
+    keyList.push(localStorageKey);
+
+    newElement.className = "taskElement"
+
+    localStorageItem = localStorage.getItem(localStorageKey)
+    if(localStorageItem === null)
+        throw new Error(`localStorage.getItem(${localStorageKey}) returned null`);
+        
+    newElement.innerHTML = localStorageItem
+    tasks.push(newElement)
+    taskList.append(newElement)
+}
 
 timerSelect.addEventListener("change", (): void =>{
     if(timerSelect.value == "no"){
@@ -56,30 +78,43 @@ function createTask(text: string): HTMLDivElement {
     return newTask
 }
 
+function addTask(task: HTMLDivElement, precision: number): void {
+    taskList.append(task)
+    tasks.push(task)
+
+    let newItemKey: string = Math.floor( Math.random() * Math.pow(10, precision) ).toString()
+    keyList.push(newItemKey)
+    localStorage.setItem(newItemKey, task.innerHTML)
+}
+
 addTaskButton.addEventListener("click", (): void => {
     if(inputBar.value === "")
         return
 
     let newTask = createTask(inputBar.value)
-
-    taskList.append(newTask)
-    tasks.push(newTask)
-
-    inputBar.value = ""
+    addTask(newTask, 8)
 
     addTaskButton.style.display = "none"
-    inputBar.style.display = "none"
     newTaskButton.style.display = "initial"
+
+    inputBar.style.display = "none"
+    inputBar.value = ""
+
     timerSelect.style.display = "none"
-    hourSelect.style.display = "none"
-    minuteSelect.style.display = "none"
     timerSelect.value = "no"
+
+    hourSelect.style.display = "none"
+    hourSelect.value = "00"
+
+    minuteSelect.style.display = "none"
+    minuteSelect.value = "00"
 })
 
 async function removeTask(taskElement: HTMLButtonElement): Promise<void>{
     let divNode = taskElement.parentElement as HTMLDivElement
     let parentNode = divNode.parentElement as HTMLDivElement
-    let rowNode: HTMLElement = parentNode.children[0] as HTMLDivElement
+    let rowNode = parentNode.children[0] as HTMLDivElement
+    let indexOfElement = tasks.indexOf(parentNode)
 
     taskElement.textContent = 'X'
 
@@ -87,17 +122,20 @@ async function removeTask(taskElement: HTMLButtonElement): Promise<void>{
     rowNode.style.opacity = "40%"
 
     divNode.style.opacity = "40%"
-
+    
+    tasks.splice(indexOfElement, 1)
+    keyList.splice(indexOfElement, 1)
+    
     await sleep(2000)
 
-    tasks.splice(tasks.indexOf(parentNode), 1)
+    localStorage.removeItem(keyList[indexOfElement])
     parentNode.remove()
 }
 
 function checkTimers() {
     let time = new Date()
 
-    for (const index in tasks){
+    for (let index = 0; index < tasks.length; index++){
         let spanElement = tasks[index].children[1].children[0] as HTMLSpanElement
 
         if(spanElement.textContent == "")
