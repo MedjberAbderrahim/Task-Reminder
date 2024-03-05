@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Task Reminder",
+    "description": "A simple app to set reminders (time optional)",
+    "version": "1.0",
+    "action":{
+        "default_popup": "index.html",
+        "default_icon": "Images/icon.png"
+    }
+}
