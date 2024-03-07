@@ -1,4 +1,4 @@
-"use strict";
+// import {removeTask} from "./background";
 const inputBar = document.querySelector("#input");
 const newTaskButton = document.querySelector("#newTask");
 const addTaskButton = document.querySelector("#addTask");
@@ -14,8 +14,7 @@ let date = new Date();
 const months = ["January", "February", "March", "April", "May", "June", "July", "August",
     "September", "October", "November", "December"];
 const days = [31, (date.getFullYear() % 4) ? 28 : 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
-let tasks = [];
+export let tasks = [];
 let keyList = [];
 function fillSelect(parentNode, start, end, srcArr, initialText, defaultSelect) {
     if (srcArr != undefined) {
@@ -96,7 +95,6 @@ function createTask(text) {
     newRow.textContent = text;
     newSpan.className = "timeElements";
     newRemoveButton.className = "removeButton";
-    newRemoveButton.setAttribute("onclick", "removeTask(this.parentNode.parentNode)");
     newDiv.append(newSpan, newRemoveButton);
     newTask.append(newRow, newDiv);
     return newTask;
@@ -125,32 +123,9 @@ addTaskButton.addEventListener("click", () => {
     minuteSelect.value = String(date.getMinutes() + 1).padStart(2, '0');
     days[1] = (date.getFullYear() % 4) ? 28 : 29;
 });
-async function removeTask(taskElement) {
-    let indexOfElement = tasks.indexOf(taskElement);
-    if (indexOfElement === -1)
-        throw new Error("Element to be deleted not found in tasks array");
-    let divElement = taskElement.children[1];
-    divElement.children[1].textContent = 'X';
-    let textElement = taskElement.children[0];
-    textElement.style.textDecoration = "line-through";
-    textElement.style.opacity = divElement.style.opacity = "40%";
-    tasks.splice(indexOfElement, 1);
-    await sleep(2000);
-    localStorage.removeItem(keyList[indexOfElement]);
-    keyList.splice(indexOfElement, 1);
-    taskElement.remove();
-}
-function checkTimers() {
-    let date = new Date();
-    for (let index = 0; index < tasks.length; index++) {
-        let spanElement = tasks[index].children[1].children[0];
-        if (spanElement.textContent == "" || spanElement.textContent == null)
-            continue;
-        if (Math.trunc(date.getTime() / 1000) == Math.trunc(new Date(spanElement.textContent).getTime() / 1000)) {
-            let alertText = tasks[index].children[0].textContent;
-            removeTask(tasks[index]);
-            alert(`Task is up!\n${alertText}`);
-        }
-    }
-}
-setInterval(checkTimers, 1000);
+taskList.addEventListener("click", (event) => {
+    var _a;
+    let target = event.target;
+    if (target.tagName === 'BUTTON')
+        removeTask((_a = target.parentElement) === null || _a === void 0 ? void 0 : _a.parentElement);
+});

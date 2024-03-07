@@ -1,3 +1,5 @@
+// import {removeTask} from "./background";
+
 const inputBar = document.querySelector("#input") as HTMLInputElement
 const newTaskButton = document.querySelector("#newTask") as HTMLButtonElement
 const addTaskButton = document.querySelector("#addTask") as HTMLButtonElement
@@ -16,9 +18,7 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
 
 const days = [31, (date.getFullYear() % 4) ? 28: 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
-
-let tasks: HTMLElement[] = []
+export let tasks: HTMLElement[] = []
 let keyList: string[] = []
 
 function fillSelect(parentNode: HTMLSelectElement, start: number, end: number, srcArr?: string[], initialText?: string, defaultSelect?: number): void
@@ -115,7 +115,7 @@ function createTask(text: string): HTMLDivElement {
         let enteredTime = new Date(`${daySelect.value} ${monthSelect.value} ${yearSelect.value} ${hourSelect.value}:${minuteSelect.value}`)
         if(enteredTime.getTime() < (date.getTime() + 12e4) ) //time must be at least 2 minutes from now
             throw new Error("Invalid Date entered, must be at least 2 minutes (in seconds) from now!");
-
+        
         newSpan.textContent = `${daySelect.value} ${monthSelect.value} ${yearSelect.value} ${hourSelect.value}:${minuteSelect.value}`
     }
     else
@@ -127,7 +127,6 @@ function createTask(text: string): HTMLDivElement {
     newSpan.className = "timeElements"
 
     newRemoveButton.className = "removeButton"
-    newRemoveButton.setAttribute("onclick", "removeTask(this.parentNode.parentNode)")
 
     newDiv.append(newSpan, newRemoveButton)
     newTask.append(newRow, newDiv)
@@ -168,43 +167,8 @@ addTaskButton.addEventListener("click", (): void => {
     days[1] = (date.getFullYear() % 4) ? 28: 29
 })
 
-async function removeTask(taskElement: HTMLDivElement): Promise<void>{
-    let indexOfElement = tasks.indexOf(taskElement)
-    if(indexOfElement === -1)
-        throw new Error("Element to be deleted not found in tasks array")
-    
-    let divElement = taskElement.children[1] as HTMLDivElement
-    divElement.children[1].textContent = 'X'
-    
-    let textElement = taskElement.children[0] as HTMLDivElement
-    textElement.style.textDecoration = "line-through"
-    textElement.style.opacity = divElement.style.opacity = "40%"
-
-    tasks.splice(indexOfElement, 1)
-
-    await sleep(2000)
-
-    localStorage.removeItem(keyList[indexOfElement])
-    keyList.splice(indexOfElement, 1)
-    taskElement.remove()
-}
-
-function checkTimers() {
-    let date = new Date()
-
-    for (let index = 0; index < tasks.length; index++){
-        let spanElement = tasks[index].children[1].children[0] as HTMLSpanElement
-
-        if(spanElement.textContent == "" || spanElement.textContent == null)
-            continue
-
-        if(Math.trunc(date.getTime() / 1000) == Math.trunc(new Date(spanElement.textContent).getTime() / 1000) ){
-            let alertText = tasks[index].children[0].textContent
-
-            removeTask(tasks[index] as HTMLDivElement)
-            alert(`Task is up!\n${alertText}`)
-        }
-    }
-}
-
-setInterval(checkTimers, 1000)
+taskList.addEventListener("click", (event): void => {
+    let target = event.target as HTMLElement
+    if(target.tagName === 'BUTTON')
+        removeTask(target.parentElement?.parentElement as HTMLDivElement)
+})

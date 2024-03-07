@@ -2,38 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="index.css">
+    <script type="module" src="background.js"></script>
+    <script type="module" src="index.js"></script>
+    <link rel="stylesheet" href="./Style/index.css">
 </head>
 <body>
 
     <div id="titleDiv">
         <h1>To-Do List</h1>
         <input id="input">
+        <select name="time" id="timerSelect">
+            <option value="no" selected>no</option>
+            <option value="yes">yes</option>
+        </select>
         <div>
             <button id="newTask">+</button>
             <button id="addTask">+</button>
         </div>
     </div>
 
-    <select name="time" id="timerSelect">
-        <option value="no" selected>no</option>
-        <option value="yes">yes</option>
-    </select>
+    <div class="timeRow">
+        <select name="year" id="yearSelect" class="notTimerSelect"></select>
+        <select name="month" id="monthSelect" class="notTimerSelect"></select>
+        <select name="day" id="daySelect" class="notTimerSelect"></select>
+    </div>
 
-    <select name="year" id="yearSelect" class="notTimerSelect"></select>
-
-    <select name="month" id="monthSelect" class="notTimerSelect"></select>
-
-    <select name="day" id="daySelect" class="notTimerSelect"></select>
-
-    <select name="hour" id="hourSelect" class="notTimerSelect"></select>
-
-    <select name="minute" id="minuteSelect" class="notTimerSelect"></select>
+    <div class="timeRow">
+        <select name="hour" id="hourSelect" class="notTimerSelect"></select>
+        <select name="minute" id="minuteSelect" class="notTimerSelect"></select>
+    </div>
 
     <hr>
 
     <div id="taskList"></div>
-
-    <script src="index.js"></script>
 </body>
 </html>
