@@ -1,0 +1,3 @@
+remove removeTask(this.parentNode.parentNode) and replaced it with event listeners to fix security issues
+set background to background.js
+set module to module so I can export and import inside the chrome extension
