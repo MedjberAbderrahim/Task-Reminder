@@ -1,3 +1,5 @@
-remove removeTask(this.parentNode.parentNode) and replaced it with event listeners to fix security issues
-set background to background.js
-set module to module so I can export and import inside the chrome extension
+- Removed attribute "onclick='removeTask(this.parentNode.parentNode)'" from removeButton elements and replaced it with event listener, chrome was having a problem with in-line scripts
+- background.ts and its JS file for the periodic check-up
+- Added the background file in manifest.json
+- Changed some CSS to look better in the chrome extension format 
+- Changed to using the Notification API, it is more suitable in this case than alert()
