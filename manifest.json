@@ -3,8 +3,14 @@
     "name": "Task Reminder",
     "description": "A simple app to set reminders (time optional)",
     "version": "1.0",
-    "action":{
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
         "default_popup": "index.html",
         "default_icon": "Images/icon.png"
-    }
+    },
+    "permissions": [
+        "notifications"
+    ]
 }
