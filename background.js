@@ -1,51 +1,37 @@
 "use strict";
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
-let tasks = [];
-let keyList = [];
-for (let i = 0; i < localStorage.length; i++) {
-    let localStorageKey = localStorage.key(i);
-    let newElement = document.createElement("div");
-    let localStorageItem;
-    if (localStorageKey === null)
-        throw new Error(`localStorage.key(${i}) returned null`);
-    keyList.push(localStorageKey);
-    newElement.className = "taskElement";
-    localStorageItem = localStorage.getItem(localStorageKey);
-    if (localStorageItem === null)
-        throw new Error(`localStorage.getItem(${localStorageKey}) returned null`);
-    newElement.innerHTML = localStorageItem;
-    tasks.push(newElement);
-}
-/*export*/ async function removeTask(taskElement) {
-    let indexOfElement = tasks.indexOf(taskElement);
-    if (indexOfElement === -1)
-        throw new Error("Element to be deleted not found in tasks array");
-    let divElement = taskElement.children[1];
-    divElement.children[1].textContent = 'X';
-    let textElement = taskElement.children[0];
-    textElement.style.textDecoration = "line-through";
-    textElement.style.opacity = divElement.style.opacity = "40%";
-    tasks.splice(indexOfElement, 1);
-    await sleep(2000);
-    localStorage.removeItem(keyList[indexOfElement]);
-    keyList.splice(indexOfElement, 1);
-    taskElement.remove();
+const selfe = self;
+let extensionOpened = false;
+self.addEventListener("message", (event) => {
+    if (!event.data)
+        throw new Error("event.data is null");
+    extensionOpened = (event.data.action === "extensionOpened");
+});
+async function background_removeTask(key) {
+    chrome.storage.sync.remove(key);
 }
 function checkTimers() {
     let date = new Date();
-    for (let index = 0; index < tasks.length; index++) {
-        let spanElement = tasks[index].children[1].children[0];
-        if (spanElement.textContent == "" || spanElement.textContent == null)
-            continue;
-        if (Math.trunc(date.getTime() / 1000) >= Math.trunc(new Date(spanElement.textContent).getTime() / 1000)) {
-            let notificationText = tasks[index].children[0].textContent;
-            let notif;
-            if (notificationText === null)
-                throw new Error("Text for task is null");
-            if (Notification.permission === "granted")
-                notif = new Notification("Task reminder", { body: notificationText, image: "Images/icon.png" });
-            removeTask(tasks[index]);
+    chrome.storage.sync.get(null).then((response) => {
+        for (let key in response) {
+            if (!key)
+                throw new Error(`key = ""`);
+            if (!response[key])
+                throw new Error(`reponse[key] = ""`);
+            let time = response[key].split(`<span class="timeElements">`)[1].split(`</span>`)[0];
+            if (!time)
+                continue;
+            if (Math.trunc(date.getTime() / 1000) >= Math.trunc(new Date(time).getTime() / 1000)) {
+                if (extensionOpened) {
+                    selfe.clients.matchAll().then(clients => {
+                        clients.forEach(client => {
+                            client.postMessage({ key: key });
+                        });
+                    });
+                }
+                else
+                    background_removeTask(key);
+            }
         }
-    }
+    });
 }
 setInterval(checkTimers, 1000);

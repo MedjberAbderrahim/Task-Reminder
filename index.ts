@@ -1,5 +1,3 @@
-// import {removeTask} from "./background";
-
 const inputBar = document.querySelector("#input") as HTMLInputElement
 const newTaskButton = document.querySelector("#newTask") as HTMLButtonElement
 const addTaskButton = document.querySelector("#addTask") as HTMLButtonElement
@@ -13,16 +11,16 @@ const minuteSelect = document.querySelector("#minuteSelect") as HTMLSelectElemen
 const notTimerSelectElements = document.querySelectorAll(".notTimerSelect") as NodeListOf <HTMLSelectElement>
 let date = new Date()
 
-const months = ["January", "February", "March", "April", "May", "June", "July", "August",
-             "September", "October", "November", "December"]
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
+
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 const days = [31, (date.getFullYear() % 4) ? 28: 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-export let tasks: HTMLElement[] = []
+let tasks: HTMLDivElement[] = []
 let keyList: string[] = []
 
-function fillSelect(parentNode: HTMLSelectElement, start: number, end: number, srcArr?: string[], initialText?: string, defaultSelect?: number): void
-{
+function fillSelect(parentNode: HTMLSelectElement, start: number, end: number, srcArr?: string[], initialText?: string, defaultSelect?: number): void {
     if(srcArr != undefined){
         start = 0
         end = srcArr.length
@@ -58,26 +56,47 @@ fillSelect(hourSelect, 0, 24, undefined, "--HOURS--", date.getHours())
 
 fillSelect(minuteSelect, 0, 60, undefined, "--MINUTES--", date.getMinutes() + 1)
 
-for(let i = 0; i < localStorage.length; i++){
-    let localStorageKey = localStorage.key(i)
-    let newElement = document.createElement("div") as HTMLDivElement
-    let localStorageItem: string | null
 
-    if(localStorageKey === null)
-        throw new Error(`localStorage.key(${i}) returned null`);
-    
-    keyList.push(localStorageKey);
+chrome.storage.sync.get(null).then((response) => {
+    for(let key in response){
+        let newElement = document.createElement("div") as HTMLDivElement
+        newElement.className = "taskElement"
 
-    newElement.className = "taskElement"
+        let data = response[key] as string
+        if(data === null)
+            throw new Error(`response[key] returned null`);
 
-    localStorageItem = localStorage.getItem(localStorageKey)
-    if(localStorageItem === null)
-        throw new Error(`localStorage.getItem(${localStorageKey}) returned null`);
+        newElement.innerHTML = data
         
-    newElement.innerHTML = localStorageItem
-    tasks.push(newElement)
-    taskList.append(newElement)
+        keyList.push(key)
+        
+        tasks.push(newElement)
+        taskList.append(newElement)
+    }
+})
+
+navigator.serviceWorker.controller?.postMessage( {action: "extensionOpened"} )
+
+// when the user clicks elsewhere, already tried onunload and some others
+window.onblur =  (): void => {
+    console.log("extension closed, will send message now")
+    navigator.serviceWorker.controller?.postMessage( {action: "extensionClosed"} )
 }
+
+navigator.serviceWorker.addEventListener('message', event => {
+    if(!event.data)
+        throw new Error("event.data is null");
+    
+    if(!event.data.key)
+        throw new Error("event.data.key is null");
+    
+    let targetPos = keyList.findIndex((key: string) => key === event.data.key)
+    if(targetPos === -1)
+        throw new Error(`Couldn't find element with key ${event.data.key}`);
+    
+    removeTask(tasks[targetPos])
+    });
+  
 
 timerSelect.addEventListener("change", (): void =>{
     if(timerSelect.value == "no")
@@ -140,7 +159,14 @@ function addTask(task: HTMLDivElement, precision: number): void {
 
     let newItemKey: string = Math.floor( Math.random() * Math.pow(10, precision) ).toString()
     keyList.push(newItemKey)
-    localStorage.setItem(newItemKey, task.innerHTML)
+    if(chrome.storage === undefined)
+        throw new Error("chrome.storage undefined")
+
+    else{
+        let data: Record<string, string>  = {}
+        data[newItemKey] = task.innerHTML
+        chrome.storage.sync.set(data)
+    }
 }
 
 addTaskButton.addEventListener("click", (): void => {
@@ -172,3 +198,24 @@ taskList.addEventListener("click", (event): void => {
     if(target.tagName === 'BUTTON')
         removeTask(target.parentElement?.parentElement as HTMLDivElement)
 })
+
+async function removeTask(taskElement: HTMLDivElement): Promise<void>{
+    let indexOfElement = tasks.indexOf(taskElement)
+    if(indexOfElement === -1)
+        throw new Error("Element to be deleted not found in tasks array")
+    
+    let divElement = taskElement.children[1] as HTMLDivElement
+    divElement.children[1].textContent = 'X'
+    
+    let textElement = taskElement.children[0] as HTMLDivElement
+    textElement.style.textDecoration = "line-through"
+    textElement.style.opacity = divElement.style.opacity = "40%"
+
+    tasks.splice(indexOfElement, 1)
+    await chrome.storage.sync.remove(keyList[indexOfElement])
+    keyList.splice(indexOfElement, 1)
+    
+    await sleep(2000)
+
+    taskElement.remove()
+}
