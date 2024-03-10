@@ -4,13 +4,15 @@
     "description": "A simple app to set reminders (time optional)",
     "version": "1.0",
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "./background.js",
+        "type": "module"
     },
     "action": {
         "default_popup": "index.html",
         "default_icon": "Images/icon.png"
     },
     "permissions": [
-        "notifications"
+        "notifications",
+        "storage"
     ]
 }
