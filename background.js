@@ -6,9 +6,6 @@ self.addEventListener("message", (event) => {
         throw new Error("event.data is null");
     extensionOpened = (event.data.action === "extensionOpened");
 });
-async function background_removeTask(key) {
-    chrome.storage.sync.remove(key);
-}
 function checkTimers() {
     let date = new Date();
     chrome.storage.sync.get(null).then((response) => {
@@ -21,15 +18,13 @@ function checkTimers() {
             if (!time)
                 continue;
             if (Math.trunc(date.getTime() / 1000) >= Math.trunc(new Date(time).getTime() / 1000)) {
-                if (extensionOpened) {
-                    selfe.clients.matchAll().then(clients => {
-                        clients.forEach(client => {
-                            client.postMessage({ key: key });
-                        });
+                if (!extensionOpened)
+                    chrome.windows.create({ url: "index.html", type: "popup" });
+                selfe.clients.matchAll().then(clients => {
+                    clients.forEach(client => {
+                        client.postMessage({ key: key });
                     });
-                }
-                else
-                    background_removeTask(key);
+                });
             }
         }
     });

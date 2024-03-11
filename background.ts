@@ -1,16 +1,12 @@
 const selfe: ServiceWorkerGlobalScope = (self as unknown) as ServiceWorkerGlobalScope;
-
 let extensionOpened: boolean = false
+
 self.addEventListener("message", (event) => {
     if(!event.data)
         throw new Error("event.data is null");
 
     extensionOpened = (event.data.action === "extensionOpened")
 })
-
-async function background_removeTask(key: string): Promise<void>{
-    chrome.storage.sync.remove(key)
-}
 
 function checkTimers() {
     let date = new Date()
@@ -28,15 +24,14 @@ function checkTimers() {
                 continue
 
             if(Math.trunc(date.getTime() / 1000) >= Math.trunc(new Date(time).getTime() / 1000) ){
-                if(extensionOpened){
-                    selfe.clients.matchAll().then(clients => {
-                        clients.forEach(client => {
-                          client.postMessage({ key: key });
-                        });
-                    });
-                }
-                else
-                    background_removeTask(key)            
+                if(!extensionOpened)
+                    chrome.windows.create({url: "index.html", type: "popup"})
+                
+                selfe.clients.matchAll().then(clients => {
+                    clients.forEach(client => {
+                        client.postMessage({ key: key });
+                    })
+                })
             }
         }
     })
