@@ -1,0 +1,7 @@
+- Set the extension to open once time for a task is up
+- Fixed a bug with minutes selected option, where it would overflow the 59-minutes limit.
+- Couldn't get it to open in a natural way (as a usual extension), so I set it to open as a window, which looked more convenient and closer to reality than a new tab.
+- Fully implemented the Notification API, and the app is now sending notifications as expected.
+
+-- REMAINING -- (Additional features)
+- Add an alarm-like sound when a task is up.
