@@ -42,7 +42,12 @@ fillSelect(yearSelect, date.getFullYear(), date.getFullYear() + 5, undefined, "-
 fillSelect(monthSelect, 0, 0, months, "--MONTHS--", date.getMonth());
 fillSelect(daySelect, 1, days[date.getMonth()] + 1, undefined, "--DAYS--", date.getDate());
 fillSelect(hourSelect, 0, 24, undefined, "--HOURS--", date.getHours());
-fillSelect(minuteSelect, 0, 60, undefined, "--MINUTES--", date.getMinutes() + 1);
+fillSelect(minuteSelect, 0, 60, undefined, "--MINUTES--", (date.getMinutes() + 3) % 60);
+if (Notification.permission !== "granted")
+    Notification.requestPermission().then((response) => {
+        if (response !== "granted")
+            console.error("Notification permissions not granted");
+    });
 chrome.storage.sync.get(null).then((response) => {
     for (let key in response) {
         let newElement = document.createElement("div");
@@ -57,11 +62,7 @@ chrome.storage.sync.get(null).then((response) => {
     }
 });
 (_a = navigator.serviceWorker.controller) === null || _a === void 0 ? void 0 : _a.postMessage({ action: "extensionOpened" });
-window.onblur = () => {
-    var _a;
-    console.log("extension closed, will send message now");
-    (_a = navigator.serviceWorker.controller) === null || _a === void 0 ? void 0 : _a.postMessage({ action: "extensionClosed" });
-};
+window.onblur = () => { var _a; return (_a = navigator.serviceWorker.controller) === null || _a === void 0 ? void 0 : _a.postMessage({ action: "extensionClosed" }); };
 navigator.serviceWorker.addEventListener('message', event => {
     if (!event.data)
         throw new Error("event.data is null");
@@ -114,7 +115,7 @@ function createTask(text) {
     newTask.append(newRow, newDiv);
     return newTask;
 }
-function addTask(task, precision) {
+async function addTask(task, precision) {
     taskList.append(task);
     tasks.push(task);
     let newItemKey = Math.floor(Math.random() * Math.pow(10, precision)).toString();
@@ -124,7 +125,7 @@ function addTask(task, precision) {
     else {
         let data = {};
         data[newItemKey] = task.innerHTML;
-        chrome.storage.sync.set(data);
+        await chrome.storage.sync.set(data);
     }
 }
 addTaskButton.addEventListener("click", () => {
@@ -157,11 +158,18 @@ async function removeTask(taskElement) {
     let divElement = taskElement.children[1];
     divElement.children[1].textContent = 'X';
     let textElement = taskElement.children[0];
+    if (!textElement.textContent)
+        throw new Error("Task's text is empty");
     textElement.style.textDecoration = "line-through";
     textElement.style.opacity = divElement.style.opacity = "40%";
+    let notif = new Notification("Task is up!", { body: textElement.textContent, image: "Images/icon.png" });
+    setTimeout(() => {
+        notif.close();
+    }, 4000);
     tasks.splice(indexOfElement, 1);
     await chrome.storage.sync.remove(keyList[indexOfElement]);
     keyList.splice(indexOfElement, 1);
-    await sleep(2000);
-    taskElement.remove();
+    setTimeout(() => {
+        taskElement.remove();
+    }, 2000);
 }

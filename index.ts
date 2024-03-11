@@ -54,8 +54,13 @@ fillSelect(daySelect, 1, days[date.getMonth()] + 1, undefined, "--DAYS--", date.
 
 fillSelect(hourSelect, 0, 24, undefined, "--HOURS--", date.getHours())
 
-fillSelect(minuteSelect, 0, 60, undefined, "--MINUTES--", date.getMinutes() + 1)
+fillSelect(minuteSelect, 0, 60, undefined, "--MINUTES--", (date.getMinutes() + 3) % 60)
 
+if(Notification.permission !== "granted")
+    Notification.requestPermission().then( (response): void => {
+        if(response !== "granted")
+            console.error("Notification permissions not granted");
+    })
 
 chrome.storage.sync.get(null).then((response) => {
     for(let key in response){
@@ -78,10 +83,7 @@ chrome.storage.sync.get(null).then((response) => {
 navigator.serviceWorker.controller?.postMessage( {action: "extensionOpened"} )
 
 // when the user clicks elsewhere, already tried onunload and some others
-window.onblur =  (): void => {
-    console.log("extension closed, will send message now")
-    navigator.serviceWorker.controller?.postMessage( {action: "extensionClosed"} )
-}
+window.onblur =  (): void => navigator.serviceWorker.controller?.postMessage( {action: "extensionClosed"} )
 
 navigator.serviceWorker.addEventListener('message', event => {
     if(!event.data)
@@ -153,7 +155,7 @@ function createTask(text: string): HTMLDivElement {
     return newTask
 }
 
-function addTask(task: HTMLDivElement, precision: number): void {
+async function addTask(task: HTMLDivElement, precision: number): Promise<void> {
     taskList.append(task)
     tasks.push(task)
 
@@ -165,7 +167,7 @@ function addTask(task: HTMLDivElement, precision: number): void {
     else{
         let data: Record<string, string>  = {}
         data[newItemKey] = task.innerHTML
-        chrome.storage.sync.set(data)
+        await chrome.storage.sync.set(data)
     }
 }
 
@@ -208,14 +210,24 @@ async function removeTask(taskElement: HTMLDivElement): Promise<void>{
     divElement.children[1].textContent = 'X'
     
     let textElement = taskElement.children[0] as HTMLDivElement
+    if(!textElement.textContent)
+        throw new Error("Task's text is empty");
+        
     textElement.style.textDecoration = "line-through"
     textElement.style.opacity = divElement.style.opacity = "40%"
+
+    let notif = new Notification("Task is up!", {body: textElement.textContent, image: "Images/icon.png" })
+
+    setTimeout((): void =>{
+        notif.close()
+    }, 4000)
 
     tasks.splice(indexOfElement, 1)
     await chrome.storage.sync.remove(keyList[indexOfElement])
     keyList.splice(indexOfElement, 1)
     
-    await sleep(2000)
+    setTimeout((): void => {
+        taskElement.remove()
+    }, 2000)
 
-    taskElement.remove()
 }
