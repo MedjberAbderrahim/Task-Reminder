@@ -4,7 +4,7 @@
     "description": "A simple app to set reminders (time optional)",
     "version": "1.2",
     "background": {
-        "service_worker": "./background.js",
+        "service_worker": "Scripts/background.js",
         "type": "module"
     },
     "action": {
