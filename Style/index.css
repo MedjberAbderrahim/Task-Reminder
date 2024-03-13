@@ -8,27 +8,22 @@ body{
     display: flex;
     justify-content: space-between;
     font-size: 8px;
-    height: 35px;
+    height: fit-content;
 }
 
-#newTask, #addTask{
-    width: 27px;
-    aspect-ratio: 1 / 1;
-
+#newTask, #saveTask{
+    width: 73px;
+    height: 33px;
     font-weight: bold;
-    font-size: 250%;
-
+    font-size: 12px;
     text-align: center;
-
     border-radius: 7%;
     border: none;
-
-
-    background-color: rgb(11, 11, 11);
-    color: lightgray;
+    background-color: rgb(22, 22, 22);
+    color: #AAAAAA;
 }
 
-#addTask {
+#saveTask {
     display: none;
 }
 
@@ -44,7 +39,7 @@ hr{
 }
 
 h1{
-    margin: 0;
+    margin: 0px;
 }
 
 #taskList {
