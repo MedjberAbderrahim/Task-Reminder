@@ -1,3 +1,5 @@
 - Added notification sound.
 - Added alert() when invalide time entered (less than 2 minutes) for clarity.
 - Quality of life improvements.
+- Moved all TS files to Source directory and JS files to Scripts directory.
+- Changed paths in the appropriate files.
