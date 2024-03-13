@@ -1,9 +1,0 @@
-- Used background.js as a service worker, a background script that verifies the deadlines each second.
-- Used varius APIs I searched, such as Chrome API, WebWorker API, ...etc
-- Background checking is fine, it deletes the task quietly when in background, and shows the appropriate effects when extension pop-up is opened
-- Finished setting up all the styles needed in the extension mode
-- Due to using chrome.storage and entirely ditching localStorage, the app will ONLY work in extension mode
-- Used Chrome.storage.sync instead of local, so tasks will be synced accross many devices if user has enabled synchronisation
-
--- REMAINING
-- Need to set up Notification API in pup-up mode, and look for another way in background mode
