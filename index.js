@@ -2,7 +2,7 @@
 var _a;
 const inputBar = document.querySelector("#input");
 const newTaskButton = document.querySelector("#newTask");
-const addTaskButton = document.querySelector("#addTask");
+const saveTaskButton = document.querySelector("#saveTask");
 const taskList = document.querySelector("#taskList");
 const timerSelect = document.querySelector("#timerSelect");
 const yearSelect = document.querySelector("#yearSelect");
@@ -11,6 +11,7 @@ const daySelect = document.querySelector("#daySelect");
 const hourSelect = document.querySelector("#hourSelect");
 const minuteSelect = document.querySelector("#minuteSelect");
 const notTimerSelectElements = document.querySelectorAll(".notTimerSelect");
+const notificationAudio = new Audio("Audio/NotificationSound.wav");
 let date = new Date();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -89,7 +90,7 @@ monthSelect.addEventListener("change", () => {
     fillSelect(daySelect, 1, days[tmpDate.getMonth()] + 1, undefined, "--DAYS--", date.getDate());
 });
 newTaskButton.addEventListener("click", () => {
-    inputBar.style.display = addTaskButton.style.display = timerSelect.style.display = "initial";
+    inputBar.style.display = saveTaskButton.style.display = timerSelect.style.display = "initial";
     newTaskButton.style.display = "none";
 });
 function createTask(text) {
@@ -101,8 +102,10 @@ function createTask(text) {
     let newRemoveButton = document.createElement("button");
     if (timerSelect.value == "yes") {
         let enteredTime = new Date(`${daySelect.value} ${monthSelect.value} ${yearSelect.value} ${hourSelect.value}:${minuteSelect.value}`);
-        if (enteredTime.getTime() < (date.getTime() + 12e4))
+        if (enteredTime.getTime() < (date.getTime() + 12e4)) {
+            alert("Invalid Date entered, must be at least 2 minutes (in seconds) from now!");
             throw new Error("Invalid Date entered, must be at least 2 minutes (in seconds) from now!");
+        }
         newSpan.textContent = `${daySelect.value} ${monthSelect.value} ${yearSelect.value} ${hourSelect.value}:${minuteSelect.value}`;
     }
     else
@@ -128,12 +131,10 @@ async function addTask(task, precision) {
         await chrome.storage.sync.set(data);
     }
 }
-addTaskButton.addEventListener("click", () => {
-    if (inputBar.value === "")
-        return;
-    let newTask = createTask(inputBar.value);
-    addTask(newTask, 8);
-    inputBar.style.display = timerSelect.style.display = addTaskButton.style.display = "none";
+saveTaskButton.addEventListener("click", () => {
+    if (inputBar.value)
+        addTask(createTask(inputBar.value), 8);
+    inputBar.style.display = timerSelect.style.display = saveTaskButton.style.display = "none";
     newTaskButton.style.display = "initial";
     inputBar.value = "";
     timerSelect.value = "no";
@@ -162,6 +163,7 @@ async function removeTask(taskElement) {
         throw new Error("Task's text is empty");
     textElement.style.textDecoration = "line-through";
     textElement.style.opacity = divElement.style.opacity = "40%";
+    notificationAudio.play();
     let notif = new Notification("Task is up!", { body: textElement.textContent, image: "Images/icon.png" });
     setTimeout(() => {
         notif.close();

@@ -1,6 +1,6 @@
 const inputBar = document.querySelector("#input") as HTMLInputElement
 const newTaskButton = document.querySelector("#newTask") as HTMLButtonElement
-const addTaskButton = document.querySelector("#addTask") as HTMLButtonElement
+const saveTaskButton = document.querySelector("#saveTask") as HTMLButtonElement
 const taskList = document.querySelector("#taskList") as HTMLDivElement
 const timerSelect = document.querySelector("#timerSelect") as HTMLSelectElement
 const yearSelect = document.querySelector("#yearSelect") as HTMLSelectElement
@@ -9,6 +9,8 @@ const daySelect = document.querySelector("#daySelect") as HTMLSelectElement
 const hourSelect = document.querySelector("#hourSelect") as HTMLSelectElement
 const minuteSelect = document.querySelector("#minuteSelect") as HTMLSelectElement
 const notTimerSelectElements = document.querySelectorAll(".notTimerSelect") as NodeListOf <HTMLSelectElement>
+const notificationAudio = new Audio("Audio/NotificationSound.wav")
+
 let date = new Date()
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms)); // sleep function, similar to the one of C/C++
@@ -97,8 +99,7 @@ navigator.serviceWorker.addEventListener('message', event => {
         throw new Error(`Couldn't find element with key ${event.data.key}`);
     
     removeTask(tasks[targetPos])
-    });
-  
+});
 
 timerSelect.addEventListener("change", (): void =>{
     if(timerSelect.value == "no")
@@ -120,7 +121,7 @@ monthSelect.addEventListener("change", (): void => {
 })
 
 newTaskButton.addEventListener("click", (): void => {
-    inputBar.style.display = addTaskButton.style.display = timerSelect.style.display = "initial"
+    inputBar.style.display = saveTaskButton.style.display = timerSelect.style.display = "initial"
     newTaskButton.style.display = "none"
 })
 
@@ -134,9 +135,11 @@ function createTask(text: string): HTMLDivElement {
 
     if(timerSelect.value == "yes"){
         let enteredTime = new Date(`${daySelect.value} ${monthSelect.value} ${yearSelect.value} ${hourSelect.value}:${minuteSelect.value}`)
-        if(enteredTime.getTime() < (date.getTime() + 12e4) ) //time must be at least 2 minutes from now
-            throw new Error("Invalid Date entered, must be at least 2 minutes (in seconds) from now!");
-        
+        //time must be at least 2 minutes from now
+        if(enteredTime.getTime() < (date.getTime() + 12e4) ){
+            alert("Invalid Date entered, must be at least 2 minutes (in seconds) from now!")
+            throw new Error("Invalid Date entered, must be at least 2 minutes (in seconds) from now!")
+        }
         newSpan.textContent = `${daySelect.value} ${monthSelect.value} ${yearSelect.value} ${hourSelect.value}:${minuteSelect.value}`
     }
     else
@@ -171,16 +174,13 @@ async function addTask(task: HTMLDivElement, precision: number): Promise<void> {
     }
 }
 
-addTaskButton.addEventListener("click", (): void => {
-    if(inputBar.value === "")
-        return
+saveTaskButton.addEventListener("click", (): void => {
+    if(inputBar.value)
+        addTask(createTask(inputBar.value), 8)
 
-    let newTask = createTask(inputBar.value)
-    addTask(newTask, 8)
-
-    inputBar.style.display = timerSelect.style.display = addTaskButton.style.display = "none"
+    inputBar.style.display = timerSelect.style.display = saveTaskButton.style.display = "none"
     newTaskButton.style.display = "initial"
-    
+
     inputBar.value = ""
     timerSelect.value = "no"
 
@@ -205,16 +205,18 @@ async function removeTask(taskElement: HTMLDivElement): Promise<void>{
     let indexOfElement = tasks.indexOf(taskElement)
     if(indexOfElement === -1)
         throw new Error("Element to be deleted not found in tasks array")
-    
+
     let divElement = taskElement.children[1] as HTMLDivElement
     divElement.children[1].textContent = 'X'
-    
+
     let textElement = taskElement.children[0] as HTMLDivElement
     if(!textElement.textContent)
         throw new Error("Task's text is empty");
-        
+
     textElement.style.textDecoration = "line-through"
     textElement.style.opacity = divElement.style.opacity = "40%"
+
+    notificationAudio.play()
 
     let notif = new Notification("Task is up!", {body: textElement.textContent, image: "Images/icon.png" })
 
@@ -225,9 +227,8 @@ async function removeTask(taskElement: HTMLDivElement): Promise<void>{
     tasks.splice(indexOfElement, 1)
     await chrome.storage.sync.remove(keyList[indexOfElement])
     keyList.splice(indexOfElement, 1)
-    
+
     setTimeout((): void => {
         taskElement.remove()
     }, 2000)
-
 }
