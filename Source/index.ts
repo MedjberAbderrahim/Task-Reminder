@@ -10,6 +10,7 @@ const hourSelect = document.querySelector("#hourSelect") as HTMLSelectElement
 const minuteSelect = document.querySelector("#minuteSelect") as HTMLSelectElement
 const notTimerSelectElements = document.querySelectorAll(".notTimerSelect") as NodeListOf <HTMLSelectElement>
 const notificationAudio = new Audio("Audio/NotificationSound.wav")
+const hrElement = document.querySelector("hr") as HTMLHRElement
 
 let date = new Date()
 
@@ -101,10 +102,15 @@ navigator.serviceWorker.addEventListener('message', event => {
 
 timerSelect.addEventListener("change", (): void =>{
     if(timerSelect.value == "no")
-        notTimerSelectElements.forEach((element) => element.style.display = "none")
-    else
-        notTimerSelectElements.forEach((element) => element.style.display = "initial")
-    
+        resetUI()
+    else{
+        hrElement.style.transform = "translateY(0)"
+        taskList.style.transform = "translateY(0)"
+        notTimerSelectElements.forEach((element) => {
+            element.style.opacity = "1"
+            element.style.visibility = "visible"
+        })
+    }
 })
 
 yearSelect.addEventListener("change", (): void => {
@@ -119,8 +125,10 @@ monthSelect.addEventListener("change", (): void => {
 })
 
 newTaskButton.addEventListener("click", (): void => {
-    inputBar.style.display = saveTaskButton.style.display = timerSelect.style.display = "initial"
+    saveTaskButton.style.display = "initial"
     newTaskButton.style.display = "none"
+    inputBar.style.opacity = timerSelect.style.opacity = "1"
+    inputBar.style.visibility = timerSelect.style.visibility = "visible"
 })
 
 function createTask(text: string): HTMLDivElement {
@@ -175,22 +183,36 @@ saveTaskButton.addEventListener("click", (): void => {
     if(inputBar.value)
         addTask(createTask(inputBar.value), 8)
 
-    inputBar.style.display = timerSelect.style.display = saveTaskButton.style.display = "none"
+    saveTaskButton.style.display = "none"
     newTaskButton.style.display = "initial"
+    inputBar.style.opacity = timerSelect.style.opacity = "0"
+    setTimeout(() => {
+        inputBar.style.visibility = timerSelect.style.visibility = "hidden"
+    }, 1000)
 
     inputBar.value = ""
     timerSelect.value = "no"
-
-    notTimerSelectElements.forEach((element) => element.style.display = "none")
+    resetUI()
 
     yearSelect.value = String(date.getFullYear())
     monthSelect.value = months[date.getMonth()]
     daySelect.value = String(date.getDate()).padStart(2, '0')
     hourSelect.value = String(date.getHours()).padStart(2, '0')
-    minuteSelect.value = String(date.getMinutes() + 1).padStart(2, '0')
 
     days[1] = (date.getFullYear() % 4) ? 28: 29
 })
+
+function resetUI(): void {
+    hrElement.style.transform = "translateY(-58px)"
+    taskList.style.transform = "translateY(-58px)"
+    notTimerSelectElements.forEach((element) => {
+        element.style.transitionDuration = "500ms"
+        element.style.opacity = "0"
+        setTimeout(() => {
+            element.style.visibility = "hidden"
+        }, 1000)
+    })
+}
 
 taskList.addEventListener("click", (event): void => {
     let target = event.target as HTMLElement
@@ -215,7 +237,7 @@ async function removeTask(taskElement: HTMLDivElement): Promise<void>{
 
     notificationAudio.play()
 
-    let notif = new Notification("Task is up!", {body: textElement.textContent, image: "Images/icon.png" })
+    let notif = new Notification("Task is up!", {body: textElement.textContent, icon: "Images/icon.png" })
 
     setTimeout((): void =>{
         notif.close()

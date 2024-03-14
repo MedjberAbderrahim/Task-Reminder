@@ -28,14 +28,31 @@ body{
 }
 
 hr{
-    border: 1px solid black
+    border: 1px solid black;
 }
 
 #input{
     width: 150px;
     height: 27px;
     font-size: 14px;
-    display: none;
+    background-color: rgb(66, 66, 66);
+    border: 1px solid rgb(22, 22, 22);
+    border-radius: 2px;
+}
+
+#input:focus {
+    background-color: #999999;
+}
+
+.fade {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease-in;
+}
+
+.slide {
+    transform: translateY(-58px);
+    transition: transform 1s ;
 }
 
 h1{
@@ -76,7 +93,6 @@ select{
     margin: 5px 23px;
     align-self: center;
     width: fit-content;
-    display: none;
 }
 
 .timeRow {

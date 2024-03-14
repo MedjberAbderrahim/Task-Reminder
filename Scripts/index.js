@@ -12,6 +12,7 @@ const hourSelect = document.querySelector("#hourSelect");
 const minuteSelect = document.querySelector("#minuteSelect");
 const notTimerSelectElements = document.querySelectorAll(".notTimerSelect");
 const notificationAudio = new Audio("Audio/NotificationSound.wav");
+const hrElement = document.querySelector("hr");
 let date = new Date();
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const days = [31, (date.getFullYear() % 4) ? 28 : 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -75,9 +76,15 @@ navigator.serviceWorker.addEventListener('message', event => {
 });
 timerSelect.addEventListener("change", () => {
     if (timerSelect.value == "no")
-        notTimerSelectElements.forEach((element) => element.style.display = "none");
-    else
-        notTimerSelectElements.forEach((element) => element.style.display = "initial");
+        resetUI();
+    else {
+        hrElement.style.transform = "translateY(0)";
+        taskList.style.transform = "translateY(0)";
+        notTimerSelectElements.forEach((element) => {
+            element.style.opacity = "1";
+            element.style.visibility = "visible";
+        });
+    }
 });
 yearSelect.addEventListener("change", () => {
     days[1] = (Number(yearSelect.value) % 4) ? 28 : 29;
@@ -89,8 +96,10 @@ monthSelect.addEventListener("change", () => {
     fillSelect(daySelect, 1, days[tmpDate.getMonth()] + 1, undefined, "--DAYS--", date.getDate());
 });
 newTaskButton.addEventListener("click", () => {
-    inputBar.style.display = saveTaskButton.style.display = timerSelect.style.display = "initial";
+    saveTaskButton.style.display = "initial";
     newTaskButton.style.display = "none";
+    inputBar.style.opacity = timerSelect.style.opacity = "1";
+    inputBar.style.visibility = timerSelect.style.visibility = "visible";
 });
 function createTask(text) {
     let date = new Date();
@@ -133,18 +142,32 @@ async function addTask(task, precision) {
 saveTaskButton.addEventListener("click", () => {
     if (inputBar.value)
         addTask(createTask(inputBar.value), 8);
-    inputBar.style.display = timerSelect.style.display = saveTaskButton.style.display = "none";
+    saveTaskButton.style.display = "none";
     newTaskButton.style.display = "initial";
+    inputBar.style.opacity = timerSelect.style.opacity = "0";
+    setTimeout(() => {
+        inputBar.style.visibility = timerSelect.style.visibility = "hidden";
+    }, 1000);
     inputBar.value = "";
     timerSelect.value = "no";
-    notTimerSelectElements.forEach((element) => element.style.display = "none");
+    resetUI();
     yearSelect.value = String(date.getFullYear());
     monthSelect.value = months[date.getMonth()];
     daySelect.value = String(date.getDate()).padStart(2, '0');
     hourSelect.value = String(date.getHours()).padStart(2, '0');
-    minuteSelect.value = String(date.getMinutes() + 1).padStart(2, '0');
     days[1] = (date.getFullYear() % 4) ? 28 : 29;
 });
+function resetUI() {
+    hrElement.style.transform = "translateY(-58px)";
+    taskList.style.transform = "translateY(-58px)";
+    notTimerSelectElements.forEach((element) => {
+        element.style.transitionDuration = "500ms";
+        element.style.opacity = "0";
+        setTimeout(() => {
+            element.style.visibility = "hidden";
+        }, 1000);
+    });
+}
 taskList.addEventListener("click", (event) => {
     var _a;
     let target = event.target;
@@ -163,7 +186,7 @@ async function removeTask(taskElement) {
     textElement.style.textDecoration = "line-through";
     textElement.style.opacity = divElement.style.opacity = "40%";
     notificationAudio.play();
-    let notif = new Notification("Task is up!", { body: textElement.textContent, image: "Images/icon.png" });
+    let notif = new Notification("Task is up!", { body: textElement.textContent, icon: "Images/icon.png" });
     setTimeout(() => {
         notif.close();
     }, 4000);
